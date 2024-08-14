@@ -3,11 +3,14 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { OrbitControls } from "three/examples/jsm/Addons.js";
 import car from "./assets/car.glb?url";
-const canvasEl = document.querySelector("#main-canvas");
 
-drawWater();
+const canvasEl = document.querySelector("#main-canvas"),
+	switchBtn = document.querySelector("#switch"),
+	currentAnimationEl = document.querySelector("#current-animation");
 
-function drawWater() {
+init();
+
+function init() {
 	if (!canvasEl) return;
 
 	const scene = new THREE.Scene();
@@ -19,12 +22,37 @@ function drawWater() {
 		canvas: canvasEl,
 	});
 	renderer.setSize(window.innerWidth, window.innerHeight);
+	renderer.setPixelRatio(window.devicePixelRatio);
+
+	let mixer: THREE.AnimationMixer,
+		clips: THREE.AnimationClip[] = [],
+		currentAnimation: number = 1,
+		modelLoaded: boolean = false;
 
 	const loader = new GLTFLoader();
 	loader.load(
 		car,
 		function (gltf) {
+			mixer = new THREE.AnimationMixer(gltf.scene);
+			clips = gltf.animations;
+			console.log(clips);
+
+			mixer.clipAction(clips[currentAnimation]).play();
+			if (currentAnimationEl) currentAnimationEl.textContent = clips[currentAnimation].name;
+
 			scene.add(gltf.scene);
+			modelLoaded = true;
+
+			if (switchBtn)
+				switchBtn.addEventListener("click", () => {
+					mixer.clipAction(clips[currentAnimation]).stop();
+
+					if (currentAnimation < clips.length - 1) currentAnimation++;
+					else currentAnimation = 0;
+					mixer.clipAction(clips[currentAnimation]).play();
+
+					if (currentAnimationEl) currentAnimationEl.textContent = clips[currentAnimation].name;
+				});
 		},
 		undefined,
 		function (error) {
@@ -36,17 +64,21 @@ function drawWater() {
 	const secondLight = new THREE.PointLight(0xffffff, 1500, 150);
 	light.position.set(15, 15, 8);
 	secondLight.position.set(-15, 10, -8);
-	const lightHelper = new THREE.PointLightHelper(light, 1);
-	const secondLightHelper = new THREE.PointLightHelper(secondLight, 1);
-	scene.add(light, secondLight, lightHelper, secondLightHelper);
+	scene.add(light, secondLight);
 
 	const gridHelper = new THREE.GridHelper(30, 30);
 	scene.add(gridHelper);
 
 	new OrbitControls(camera, renderer.domElement);
 
+	let clock = new THREE.Clock();
+	clock.autoStart = true;
+
 	function animate() {
 		renderer.render(scene, camera);
+
+		let delta = clock.getDelta();
+		if (modelLoaded && mixer) mixer.update(delta);
 	}
 	renderer.setAnimationLoop(animate);
 }

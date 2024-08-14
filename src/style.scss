@@ -9,3 +9,34 @@ canvas {
 	top: 0;
 	left: 0;
 }
+
+.top {
+	width: 100%;
+	max-width: 1000px;
+	padding: 0 10px;
+	position: absolute;
+	z-index: 10;
+	top: 50px;
+	left: 50%;
+	transform: translateX(-50%);
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.current-animation {
+	font-size: 20px;
+	line-height: 100%;
+	color: white;
+	font-family: "Courier New", Courier, monospace;
+}
+
+.switch {
+	cursor: pointer;
+	background: #5d8160;
+	border: none;
+	outline: none;
+	padding: 10px;
+	color: white;
+	font-family: "Courier New", Courier, monospace;
+}
